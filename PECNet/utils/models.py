@@ -12,6 +12,8 @@ import numpy as np
 import yaml
 
 '''MLP model'''
+# MLP（多層パーセプトロン）クラスの構造
+# 入力(入力次元,出力次元,隠れ層の次元,活性化関数,??,ドロップアウトの閾値)
 class MLP(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_size=(1024, 512), activation='relu', discrim=False, dropout=-1):
         super(MLP, self).__init__()
@@ -19,10 +21,11 @@ class MLP(nn.Module):
         dims.append(input_dim)
         dims.extend(hidden_size)
         dims.append(output_dim)
-        self.layers = nn.ModuleList()
+        self.layers = nn.ModuleList() # ModuleList()の形式に沿った形にlayersを指定するよということ？ この場合だったら層の深さなのかも
         for i in range(len(dims)-1):
-            self.layers.append(nn.Linear(dims[i], dims[i+1]))
+            self.layers.append(nn.Linear(dims[i], dims[i+1])) # layer[(input_dim, 1024)--(1024, 512)--(512, output_dim)]の三層パーセプトロン
 
+#　活性化関数の選択
         if activation == 'relu':
             self.activation = nn.ReLU()
         elif activation == 'sigmoid':
@@ -31,25 +34,27 @@ class MLP(nn.Module):
         self.sigmoid = nn.Sigmoid() if discrim else None
         self.dropout = dropout
 
+# 順伝播
     def forward(self, x):
-        for i in range(len(self.layers)):
-            x = self.layers[i](x)
-            if i != len(self.layers)-1:
+        for i in range(len(self.layers)): 
+            x = self.layers[i](x) 
+            if i != len(self.layers)-1: # 出力層でないとき
                 x = self.activation(x)
                 if self.dropout != -1:
                     x = nn.Dropout(min(0.1, self.dropout/3) if i == 1 else self.dropout)(x)
-            elif self.sigmoid:
+            elif self.sigmoid: # 出力層の時
                 x = self.sigmoid(x)
         return x
 
 class PECNet(nn.Module):
 
+# PECNet(config/config_gen.pyの中に記述されてるもの)
     def __init__(self, enc_past_size, enc_dest_size, enc_latent_size, dec_size, predictor_size, non_local_theta_size, non_local_phi_size, non_local_g_size, fdim, zdim, nonlocal_pools, non_local_dim, sigma, past_length, future_length, verbose):
         '''
         Args:
             size parameters: Dimension sizes
-            nonlocal_pools: Number of nonlocal pooling operations to be performed
-            sigma: Standard deviation used for sampling N(0, sigma)
+            nonlocal_pools: Number of nonlocal pooling operations to be performed #どっかに関数あった？
+            sigma: Standard deviation used for sampling N(0, sigma) # 標準偏差sigma
             past_length: Length of past history (number of timesteps)
             future_length: Length of future trajectory to be predicted
         '''
@@ -116,8 +121,8 @@ class PECNet(nn.Module):
 
         # provide destination iff training
         # assert model.training
-        assert self.training ^ (dest is None)
-        assert self.training ^ (mask is None)
+        assert self.training ^ (dest is None) # dest,maskは真偽値を持っている ^は排他的論理和 trainの時に正解ラベルは与えないようにしてる？
+        assert self.training ^ (mask is None) # maskはテストデータと訓練データを区別するために使っている？ socialmaskとは別物の気がする
 
         # encode
         ftraj = self.encoder_past(x)

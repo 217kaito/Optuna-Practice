@@ -31,4 +31,5 @@ Sampler is RandomSampler
 >>> study = optuna.create_study(sampler=optuna.samplers.CmaEsSampler())
 [I 2024-09-23 08:55:56,466] A new study created in memory with name: no-name-58879254-d7d1-4032-9ee7-de65e89e4db3
 >>> print(f"Sampler is {study.sampler.__class__.__name__}")
+Sampler is CmaEsSampler
 '''

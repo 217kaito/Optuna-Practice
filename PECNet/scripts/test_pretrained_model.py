@@ -132,6 +132,6 @@ def main():
 	print()
 	print("Average ADE:", average_ade/num_samples)
 	print("Average FDE:", average_fde/num_samples)
-	print("Average inference time:", total_inference_time/num_samples)
+	print("Average Inference time:", total_inference_time/num_samples)
 
 main()

@@ -162,6 +162,7 @@ for e in range(hyper_params['num_epochs']):
 		print("Epoch: ", e)
 		print('################## BEST PERFORMANCE {:0.2f} ########'.format(test_loss))
 		best_test_loss = test_loss
+		'''
 		if best_test_loss < 10.25:
 			save_path = '../saved_models/' + args.save_file
 			torch.save({
@@ -170,6 +171,15 @@ for e in range(hyper_params['num_epochs']):
 						'optimizer_state_dict': optimizer.state_dict()
 						}, save_path)
 			print("Saved model to:\n{}".format(save_path))
+		'''
+		save_path = '../saved_models/' + args.save_file
+		torch.save({
+					'hyper_params': hyper_params,
+					'model_state_dict': model.state_dict(),
+					'optimizer_state_dict': optimizer.state_dict()
+					}, save_path)
+		print("Saved model to:\n{}".format(save_path))
+
 
 	if final_point_loss_best < best_endpoint_loss:
 		best_endpoint_loss = final_point_loss_best

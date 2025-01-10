@@ -43,7 +43,6 @@ def test(test_dataset, model, best_of_n = 1):
 	model.eval()
 	assert best_of_n >= 1 and type(best_of_n) == int
 	test_loss = 0
-	inference_times = []
 
 	with torch.no_grad():
 		for i, (traj, mask, initial_pos) in enumerate(zip(test_dataset.trajectory_batches, test_dataset.mask_batches, test_dataset.initial_pos_batches)):
@@ -60,7 +59,6 @@ def test(test_dataset, model, best_of_n = 1):
 			all_l2_errors_dest = []
 			all_guesses = []
 			
-			start_time = time.time()
 			for index in range(best_of_n):
 				dest_recon = model.forward(x, initial_pos, device=device)
 				dest_recon = dest_recon.cpu().numpy()
@@ -68,8 +66,6 @@ def test(test_dataset, model, best_of_n = 1):
 
 				l2error_sample = np.linalg.norm(dest_recon - dest, axis = 1)
 				all_l2_errors_dest.append(l2error_sample)
-			inference_time = time.time() - start_time
-			inference_times.append(inference_time)
 
 			all_l2_errors_dest = np.array(all_l2_errors_dest)
 			all_guesses = np.array(all_guesses)
@@ -105,9 +101,8 @@ def test(test_dataset, model, best_of_n = 1):
 
 			print('Test time error in destination best: {:0.3f} and mean: {:0.3f}'.format(l2error_dest, l2error_avg_dest))
 			print('Test time error overall (ADE) best: {:0.3f}'.format(l2error_overall))
-			print('Average inference time per batch: {:0.3f} seconds'.format(np.mean(inference_times)))
 
-	return l2error_overall, l2error_dest, l2error_avg_dest, np.mean(inference_times)
+	return l2error_overall, l2error_dest, l2error_avg_dest
 
 def main():
 	N = args.num_trajectories #number of generated trajectories
@@ -123,15 +118,15 @@ def main():
 	#average ade/fde for k=20 (to account for variance in sampling)
 	num_samples = 150
 	average_ade, average_fde, total_inference_time = 0, 0, 0
+	start_total_time = time.time()
 	for i in range(num_samples):
-		test_loss, final_point_loss_best, final_point_loss_avg, inference_time = test(test_dataset, model, best_of_n = N)
+		test_loss, final_point_loss_best, final_point_loss_avg = test(test_dataset, model, best_of_n = N)
 		average_ade += test_loss
 		average_fde += final_point_loss_best
-		total_inference_time += inference_time
-
+	total_time = time.time() - start_total_time
 	print()
 	print("Average ADE:", average_ade/num_samples)
 	print("Average FDE:", average_fde/num_samples)
-	print("Average Inference time:", total_inference_time/num_samples)
+	print("Inference time:", total_time)
 
 main()

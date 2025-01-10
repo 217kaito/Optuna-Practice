@@ -149,7 +149,7 @@ for traj in test_dataset.trajectory_batches:
 	traj *= hyper_params["data_scale"]
 
 
-best_test_loss = 50 # start saving after this threshold
+best_test_loss = float('inf') # start saving after this threshold
 best_endpoint_loss = 50
 N = hyper_params["n_values"]
 

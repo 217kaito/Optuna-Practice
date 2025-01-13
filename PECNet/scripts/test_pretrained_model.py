@@ -16,6 +16,7 @@ import time
 import subprocess
 import re
 
+'''
 def get_gpu_memory_usage():
     try:
         output = subprocess.check_output(['nvidia-smi', '--query-gpu=memory.used,memory.total,utilization.gpu', '--format=csv,nounits,noheader'])
@@ -23,6 +24,7 @@ def get_gpu_memory_usage():
         return f"GPU使用率: {gpu_util}%, メモリ使用: {memory_used}MB / {memory_total}MB"
     except:
         return "GPU情報を取得できません"
+'''
 
 parser = argparse.ArgumentParser(description='PECNet')
 
@@ -41,7 +43,7 @@ device = torch.device('cuda', index=args.gpu_index) if torch.cuda.is_available()
 if torch.cuda.is_available():
 	torch.cuda.set_device(args.gpu_index)
 print(device)
-print(get_gpu_memory_usage())
+#print(get_gpu_memory_usage())
 
 checkpoint = torch.load('../saved_models/{}'.format(args.load_file), map_location=device)
 hyper_params = checkpoint["hyper_params"]
@@ -111,7 +113,7 @@ def test(test_dataset, model, best_of_n = 1):
 
 			print('Test time error in destination best: {:0.3f} and mean: {:0.3f}'.format(l2error_dest, l2error_avg_dest))
 			print('Test time error overall (ADE) best: {:0.3f}'.format(l2error_overall))
-			print(get_gpu_memory_usage())
+			#print(get_gpu_memory_usage())
 
 	return l2error_overall, l2error_dest, l2error_avg_dest
 
@@ -139,6 +141,6 @@ def main():
 	print("Average ADE:", average_ade/num_samples)
 	print("Average FDE:", average_fde/num_samples)
 	print("Inference time:", total_time)
-	print(get_gpu_memory_usage())
+	#print(get_gpu_memory_usage())
 
 main()

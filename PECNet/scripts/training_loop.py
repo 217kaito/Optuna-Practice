@@ -34,6 +34,17 @@ with open("../config/" + args.config_filename, 'r') as file:
 	except:
 		hyper_params = yaml.load(file)
 file.close()
+
+# パラメータがなかったらデフォルト値を設定
+if "activation" not in hyper_params:
+    hyper_params["activation"] = "relu"
+
+if "discrim" not in hyper_params:
+    hyper_params["discrim"] = False
+
+if "dropout" not in hyper_params:
+    hyper_params["dropout"] = -1
+    
 print(hyper_params)
 
 def train(train_dataset):
@@ -133,7 +144,7 @@ def test(test_dataset, best_of_n = 1):
 
 	return l2error_overall, l2error_dest, l2error_avg_dest
 
-model = PECNet(hyper_params["enc_past_size"], hyper_params["enc_dest_size"], hyper_params["enc_latent_size"], hyper_params["dec_size"], hyper_params["predictor_hidden_size"], hyper_params['non_local_theta_size'], hyper_params['non_local_phi_size'], hyper_params['non_local_g_size'], hyper_params["fdim"], hyper_params["zdim"], hyper_params["nonlocal_pools"], hyper_params['non_local_dim'], hyper_params["sigma"], hyper_params["past_length"], hyper_params["future_length"], args.verbose)
+model = PECNet(hyper_params["enc_past_size"], hyper_params["enc_dest_size"], hyper_params["enc_latent_size"], hyper_params["dec_size"], hyper_params["predictor_hidden_size"], hyper_params['non_local_theta_size'], hyper_params['non_local_phi_size'], hyper_params['non_local_g_size'], hyper_params["fdim"], hyper_params["zdim"], hyper_params["nonlocal_pools"], hyper_params['non_local_dim'], hyper_params["sigma"], hyper_params["past_length"], hyper_params["future_length"], args.verbose, hyper_params["activation"], hyper_params["discrim"], hyper_params["dropout"])
 model = model.double().to(device)
 
 # hyper_params["optimizer"] の値に基づいてオプティマイザを選択

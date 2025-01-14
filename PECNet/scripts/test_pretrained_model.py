@@ -48,6 +48,16 @@ print(device)
 checkpoint = torch.load('../saved_models/{}'.format(args.load_file), map_location=device)
 hyper_params = checkpoint["hyper_params"]
 
+# パラメータがなかったらデフォルト値を設定
+if "activation" not in hyper_params:
+	hyper_params["activation"] = "relu"
+
+if "discrim" not in hyper_params:
+	hyper_params["discrim"] = False
+
+if "dropout" not in hyper_params:
+	hyper_params["dropout"] = -1
+
 print(hyper_params)
 
 def test(test_dataset, model, best_of_n = 1):
@@ -117,9 +127,9 @@ def test(test_dataset, model, best_of_n = 1):
 
 	return l2error_overall, l2error_dest, l2error_avg_dest
 
-def main():
+def main():  
 	N = args.num_trajectories #number of generated trajectories
-	model = PECNet(hyper_params["enc_past_size"], hyper_params["enc_dest_size"], hyper_params["enc_latent_size"], hyper_params["dec_size"], hyper_params["predictor_hidden_size"], hyper_params['non_local_theta_size'], hyper_params['non_local_phi_size'], hyper_params['non_local_g_size'], hyper_params["fdim"], hyper_params["zdim"], hyper_params["nonlocal_pools"], hyper_params['non_local_dim'], hyper_params["sigma"], hyper_params["past_length"], hyper_params["future_length"], args.verbose)
+	model = PECNet(hyper_params["enc_past_size"], hyper_params["enc_dest_size"], hyper_params["enc_latent_size"], hyper_params["dec_size"], hyper_params["predictor_hidden_size"], hyper_params['non_local_theta_size'], hyper_params['non_local_phi_size'], hyper_params['non_local_g_size'], hyper_params["fdim"], hyper_params["zdim"], hyper_params["nonlocal_pools"], hyper_params['non_local_dim'], hyper_params["sigma"], hyper_params["past_length"], hyper_params["future_length"], args.verbose, hyper_params["activation"], hyper_params["discrim"], hyper_params["dropout"])
 	model = model.double().to(device)
 	model.load_state_dict(checkpoint["model_state_dict"])
 	test_dataset = SocialDataset(set_name="test", b_size=hyper_params["test_b_size"], t_tresh=hyper_params["time_thresh"], d_tresh=hyper_params["dist_thresh"], verbose=args.verbose)

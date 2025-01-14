@@ -10,40 +10,12 @@ from torch.distributions.normal import Normal
 import math
 import numpy as np
 import yaml
-import argparse
-
-parser = argparse.ArgumentParser(description='PECNet')
-
-parser.add_argument('--num_workers', '-nw', type=int, default=0)
-parser.add_argument('--gpu_index', '-gi', type=int, default=0)
-parser.add_argument('--config_filename', '-cfn', type=str, default='optimal.yaml')
-parser.add_argument('--save_file', '-sf', type=str, default='PECNET_social_model.pt')
-parser.add_argument('--verbose', '-v', action='store_true')
-
-args = parser.parse_args()
-
-with open("../config/" + args.config_filename, 'r') as file:
-	try:
-		hyper_params = yaml.load(file, Loader = yaml.FullLoader)
-	except:
-		hyper_params = yaml.load(file)
-file.close()
 
 '''MLP model'''
-# パラメータがなかったらデフォルト値を設定
-if "activation" not in hyper_params:
-    hyper_params["activation"] = "relu"
-
-if "discrim" not in hyper_params:
-    hyper_params["discrim"] = False
-
-if "dropout" not in hyper_params:
-    hyper_params["dropout"] = -1
-
 # MLP（多層パーセプトロン）クラスの構造
 # 入力(入力次元,出力次元,隠れ層の次元,活性化関数,??,ドロップアウトの閾値)
 class MLP(nn.Module):
-    def __init__(self, input_dim, output_dim, hidden_size=(1024, 512), activation=hyper_params["activation"], discrim=hyper_params["discrim"], dropout=hyper_params["dropout"]):
+    def __init__(self, input_dim, output_dim, activation, discrim, dropout, hidden_size=(1024, 512)):
         print(f"activation: {activation}, discrim: {discrim}, dropout: {dropout}")
         super(MLP, self).__init__()
         dims = []
@@ -78,7 +50,7 @@ class MLP(nn.Module):
 class PECNet(nn.Module):
 
 # PECNet(config/config_gen.pyの中に記述されてるもの)
-    def __init__(self, enc_past_size, enc_dest_size, enc_latent_size, dec_size, predictor_size, non_local_theta_size, non_local_phi_size, non_local_g_size, fdim, zdim, nonlocal_pools, non_local_dim, sigma, past_length, future_length, verbose):
+    def __init__(self, enc_past_size, enc_dest_size, enc_latent_size, dec_size, predictor_size, non_local_theta_size, non_local_phi_size, non_local_g_size, fdim, zdim, nonlocal_pools, non_local_dim, sigma, past_length, future_length, verbose, activation, discrim, dropout):
         '''
         Args:
             size parameters: Dimension sizes
@@ -94,19 +66,19 @@ class PECNet(nn.Module):
         self.sigma = sigma
 
         # takes in the past
-        self.encoder_past = MLP(input_dim = past_length*2, output_dim = fdim, hidden_size=enc_past_size)
+        self.encoder_past = MLP(input_dim = past_length*2, output_dim = fdim, activation=activation, discrim=discrim, dropout=dropout, hidden_size=enc_past_size)
 
-        self.encoder_dest = MLP(input_dim = 2, output_dim = fdim, hidden_size=enc_dest_size)
+        self.encoder_dest = MLP(input_dim = 2, output_dim = fdim, activation=activation, discrim=discrim, dropout=dropout, hidden_size=enc_dest_size)
 
-        self.encoder_latent = MLP(input_dim = 2*fdim, output_dim = 2*zdim, hidden_size=enc_latent_size)
+        self.encoder_latent = MLP(input_dim = 2*fdim, output_dim = 2*zdim, activation=activation, discrim=discrim, dropout=dropout, hidden_size=enc_latent_size)
 
-        self.decoder = MLP(input_dim = fdim + zdim, output_dim = 2, hidden_size=dec_size)
+        self.decoder = MLP(input_dim = fdim + zdim, output_dim = 2, activation=activation, discrim=discrim, dropout=dropout, hidden_size=dec_size)
 
-        self.non_local_theta = MLP(input_dim = 2*fdim + 2, output_dim = non_local_dim, hidden_size=non_local_theta_size)
-        self.non_local_phi = MLP(input_dim = 2*fdim + 2, output_dim = non_local_dim, hidden_size=non_local_phi_size)
-        self.non_local_g = MLP(input_dim = 2*fdim + 2, output_dim = 2*fdim + 2, hidden_size=non_local_g_size)
+        self.non_local_theta = MLP(input_dim = 2*fdim + 2, output_dim = non_local_dim, activation=activation, discrim=discrim, dropout=dropout, hidden_size=non_local_theta_size)
+        self.non_local_phi = MLP(input_dim = 2*fdim + 2, output_dim = non_local_dim, activation=activation, discrim=discrim, dropout=dropout, hidden_size=non_local_phi_size)
+        self.non_local_g = MLP(input_dim = 2*fdim + 2, output_dim = 2*fdim + 2, activation=activation, discrim=discrim, dropout=dropout, hidden_size=non_local_g_size)
 
-        self.predictor = MLP(input_dim = 2*fdim + 2, output_dim = 2*(future_length-1), hidden_size=predictor_size)
+        self.predictor = MLP(input_dim = 2*fdim + 2, output_dim = 2*(future_length-1), activation=activation, discrim=discrim, dropout=dropout, hidden_size=predictor_size)
 
         architecture = lambda net: [l.in_features for l in net.layers] + [net.layers[-1].out_features]
 

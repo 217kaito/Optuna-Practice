@@ -160,6 +160,8 @@ elif hyper_params["optimizer"] == "Nadam":
 else:
     raise ValueError(f"Unsupported optimizer type: {hyper_params['optimizer']}")
 
+print(f"optimizer: {optimizer}")
+
 train_dataset = SocialDataset(set_name="train", b_size=hyper_params["train_b_size"], t_tresh=hyper_params["time_thresh"], d_tresh=hyper_params["dist_thresh"], verbose=args.verbose)
 test_dataset = SocialDataset(set_name="test", b_size=hyper_params["test_b_size"], t_tresh=hyper_params["time_thresh"], d_tresh=hyper_params["dist_thresh"], verbose=args.verbose)
 

@@ -39,6 +39,8 @@ if "discrim" not in hyper_params:
 
 if "dropout" not in hyper_params:
     hyper_params["dropout"] = -1
+else:
+    hyper_params["dropout"] = float(hyper_params["dropout"])
 
 # MLP（多層パーセプトロン）クラスの構造
 # 入力(入力次元,出力次元,隠れ層の次元,活性化関数,??,ドロップアウトの閾値)

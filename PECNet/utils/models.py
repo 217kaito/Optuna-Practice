@@ -44,6 +44,7 @@ if "dropout" not in hyper_params:
 # 入力(入力次元,出力次元,隠れ層の次元,活性化関数,??,ドロップアウトの閾値)
 class MLP(nn.Module):
     def __init__(self, input_dim, output_dim, hidden_size=(1024, 512), activation=hyper_params["activation"], discrim=hyper_params["discrim"], dropout=hyper_params["dropout"]):
+        print(f"activation: {activation}, discrim: {discrim}, dropout: {dropout}")
         super(MLP, self).__init__()
         dims = []
         dims.append(input_dim)

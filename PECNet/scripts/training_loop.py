@@ -135,7 +135,30 @@ def test(test_dataset, best_of_n = 1):
 
 model = PECNet(hyper_params["enc_past_size"], hyper_params["enc_dest_size"], hyper_params["enc_latent_size"], hyper_params["dec_size"], hyper_params["predictor_hidden_size"], hyper_params['non_local_theta_size'], hyper_params['non_local_phi_size'], hyper_params['non_local_g_size'], hyper_params["fdim"], hyper_params["zdim"], hyper_params["nonlocal_pools"], hyper_params['non_local_dim'], hyper_params["sigma"], hyper_params["past_length"], hyper_params["future_length"], args.verbose)
 model = model.double().to(device)
-optimizer = optim.Adam(model.parameters(), lr=  hyper_params["learning_rate"])
+
+# hyper_params["optimizer"] の値に基づいてオプティマイザを選択
+if "optimizer" not in hyper_params:
+    optimizer = optim.Adam(model.parameters(), lr=hyper_params["learning_rate"])
+elif hyper_params["optimizer"] == "Adam":
+    optimizer = optim.Adam(model.parameters(), lr=hyper_params["learning_rate"])
+elif hyper_params["optimizer"] == "SGD":
+    optimizer = optim.SGD(model.parameters(), lr=hyper_params["learning_rate"])
+elif hyper_params["optimizer"] == "Momentum":
+    optimizer = optim.SGD(model.parameters(), lr=hyper_params["learning_rate"], momentum=0.9)
+elif hyper_params["optimizer"] == "NAG":
+    optimizer = optim.SGD(model.parameters(), lr=hyper_params["learning_rate"], momentum=0.9, nesterov=True)
+elif hyper_params["optimizer"] == "Adagrad":
+    optimizer = optim.Adagrad(model.parameters(), lr=hyper_params["learning_rate"])
+elif hyper_params["optimizer"] == "RMSprop":
+    optimizer = optim.RMSprop(model.parameters(), lr=hyper_params["learning_rate"])
+elif hyper_params["optimizer"] == "AdamW":
+    optimizer = optim.AdamW(model.parameters(), lr=hyper_params["learning_rate"])
+elif hyper_params["optimizer"] == "AdaMax":
+    optimizer = optim.Adamax(model.parameters(), lr=hyper_params["learning_rate"])
+elif hyper_params["optimizer"] == "Nadam":
+    optimizer = optim.NAdam(model.parameters(), lr=hyper_params["learning_rate"])
+else:
+    raise ValueError(f"Unsupported optimizer type: {hyper_params['optimizer']}")
 
 train_dataset = SocialDataset(set_name="train", b_size=hyper_params["train_b_size"], t_tresh=hyper_params["time_thresh"], d_tresh=hyper_params["dist_thresh"], verbose=args.verbose)
 test_dataset = SocialDataset(set_name="test", b_size=hyper_params["test_b_size"], t_tresh=hyper_params["time_thresh"], d_tresh=hyper_params["dist_thresh"], verbose=args.verbose)

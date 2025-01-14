@@ -1,4 +1,7 @@
 adl_reg: 1
+activation: relu
+discrim: False
+dropout: -1
 data_scale: 1.86
 dataset_type: image
 dec_size:

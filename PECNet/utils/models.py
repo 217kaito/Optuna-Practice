@@ -10,12 +10,40 @@ from torch.distributions.normal import Normal
 import math
 import numpy as np
 import yaml
+import argparse
+
+parser = argparse.ArgumentParser(description='PECNet')
+
+parser.add_argument('--num_workers', '-nw', type=int, default=0)
+parser.add_argument('--gpu_index', '-gi', type=int, default=0)
+parser.add_argument('--config_filename', '-cfn', type=str, default='optimal.yaml')
+parser.add_argument('--save_file', '-sf', type=str, default='PECNET_social_model.pt')
+parser.add_argument('--verbose', '-v', action='store_true')
+
+args = parser.parse_args()
+
+with open("../config/" + args.config_filename, 'r') as file:
+	try:
+		hyper_params = yaml.load(file, Loader = yaml.FullLoader)
+	except:
+		hyper_params = yaml.load(file)
+file.close()
 
 '''MLP model'''
+# パラメータがなかったらデフォルト値を設定
+if "activation" not in hyper_params:
+    hyper_params["activation"] = "relu"
+
+if "discrim" not in hyper_params:
+    hyper_params["discrim"] = False
+
+if "dropout" not in hyper_params:
+    hyper_params["dropout"] = -1
+
 # MLP（多層パーセプトロン）クラスの構造
 # 入力(入力次元,出力次元,隠れ層の次元,活性化関数,??,ドロップアウトの閾値)
 class MLP(nn.Module):
-    def __init__(self, input_dim, output_dim, hidden_size=(1024, 512), activation='relu', discrim=False, dropout=-1):
+    def __init__(self, input_dim, output_dim, hidden_size=(1024, 512), activation=hyper_params["activation"], discrim=hyper_params["discrim"], dropout=hyper_params["dropout"]):
         super(MLP, self).__init__()
         dims = []
         dims.append(input_dim)

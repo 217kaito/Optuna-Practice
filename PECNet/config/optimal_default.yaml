@@ -39,6 +39,7 @@ nonlocal_pools: 3
 normalize_type: shift_origin
 num_epochs: 650
 num_workers: 0
+optimizer: Adam
 past_length: 8
 predictor_hidden_size:
 - 1024

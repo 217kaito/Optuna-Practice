@@ -47,7 +47,7 @@ if "dropout" not in hyper_params:
     
 print(hyper_params)
 
-def save_model_with_retry(save_path, hyper_params, model, optimizer, max_retries=5, wait_time=10):
+def save_model_with_retry(save_path, hyper_params, model, optimizer, max_retries=10, wait_time=10):
     for attempt in range(max_retries):
         try:
             torch.save({

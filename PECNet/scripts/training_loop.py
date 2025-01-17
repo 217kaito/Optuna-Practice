@@ -47,6 +47,23 @@ if "dropout" not in hyper_params:
     
 print(hyper_params)
 
+def save_model_with_retry(save_path, hyper_params, model, optimizer, max_retries=5, wait_time=10):
+    for attempt in range(max_retries):
+        try:
+            torch.save({
+                'hyper_params': hyper_params,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict()
+            }, save_path)
+            print("モデルが正常に保存されました。")
+            break
+        except RuntimeError as e:
+            print(f"モデルの保存に失敗しました。リトライします... ({attempt + 1}/{max_retries})")
+            print(f"エラー: {e}")
+            time.sleep(wait_time)
+    else:
+        print("モデルの保存に失敗しました。最大リトライ回数に達しました。")
+
 def train(train_dataset):
 
 	model.train()
@@ -209,11 +226,14 @@ for e in range(hyper_params['num_epochs']):
 			print("Saved model to:\n{}".format(save_path))
 		'''
 		save_path = '../saved_models/' + args.save_file
+		save_model_with_retry(save_path, hyper_params, model, optimizer)
+		'''
 		torch.save({
 					'hyper_params': hyper_params,
 					'model_state_dict': model.state_dict(),
 					'optimizer_state_dict': optimizer.state_dict()
 					}, save_path)
+		'''
 		print("Saved model to:\n{}".format(save_path))
 
 

@@ -211,7 +211,6 @@ for e in range(hyper_params['num_epochs']):
 	train_loss, rcl, kld, adl = train(train_dataset)
 	test_loss, final_point_loss_best, final_point_loss_avg = test(test_dataset, best_of_n = N)
 
-
 	if best_test_loss > test_loss:
 		print("Epoch: ", e)
 		print('################## BEST PERFORMANCE {:0.2f} ########'.format(test_loss))
@@ -228,9 +227,11 @@ for e in range(hyper_params['num_epochs']):
 		'''
 		save_path = '../saved_models/' + args.save_file
 		save_param = save_model_with_retry(save_path, hyper_params, model, optimizer)
-	    # モデルが保存されなかったら、ループを終了する
-        if not save_param:
-            break
+		print(f"save_param: {save_param}")
+		# モデルが保存されなかったら、ループを終了する
+		if not save_param:
+			break
+        
 		'''
 		torch.save({
 					'hyper_params': hyper_params,
@@ -239,6 +240,7 @@ for e in range(hyper_params['num_epochs']):
 					}, save_path)
 		'''
 		print("Saved model to:\n{}".format(save_path))
+  
 
 
 	if final_point_loss_best < best_endpoint_loss:

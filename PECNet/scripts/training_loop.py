@@ -56,14 +56,13 @@ def save_model_with_retry(save_path, hyper_params, model, optimizer, max_retries
                 'optimizer_state_dict': optimizer.state_dict()
             }, save_path)
             print("モデルが正常に保存されました。")
-            return True
+            break
         except RuntimeError as e:
             print(f"モデルの保存に失敗しました。リトライします... ({attempt + 1}/{max_retries})")
             print(f"エラー: {e}")
             time.sleep(wait_time)
     else:
         print("モデルの保存に失敗しました。最大リトライ回数に達しました。")
-        return False
 
 def train(train_dataset):
 
@@ -226,11 +225,7 @@ for e in range(hyper_params['num_epochs']):
 			print("Saved model to:\n{}".format(save_path))
 		'''
 		save_path = '../saved_models/' + args.save_file
-		save_param = save_model_with_retry(save_path, hyper_params, model, optimizer)
-		print(f"save_param: {save_param}")
-		# モデルが保存されなかったら、ループを終了する
-		if not save_param:
-			break
+		save_model_with_retry(save_path, hyper_params, model, optimizer)
         
 		'''
 		torch.save({

@@ -45,7 +45,7 @@ if "discrim" not in hyper_params:
 if "dropout" not in hyper_params:
     hyper_params["dropout"] = -1
     
-print(hyper_params)
+print(f"hyper_params: {hyper_params}")
 
 def save_model_with_retry(save_path, hyper_params, model, optimizer, max_retries=10, wait_time=10):
     for attempt in range(max_retries):

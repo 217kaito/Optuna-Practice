@@ -43,29 +43,29 @@ PECNetのハイパーパラメータチューニングのために以下のフ�
 
 ```mermaid
 graph TD
-    A[デフォルトパラメータ読み込み<br/>optimal_default.yaml] --> B[パラメータ範囲のサジェスト<br/>suggest_parameter_range.ipynb]
-    B --> C{チューニング対象パラメータ}
-    C -->|nonlocal_pools| D[tune_hyperparameters.ipynb<br/>TPESamplerで最適化]
-    C -->|learning_rate, num_epochs, adl_reg| E[tune_hyperparameters2.ipynb<br/>多目的最適化: ADE/FDE/推論時間]
-    C -->|dec_size, adl_reg, kld_reg| F[tune_hyperparameters3.ipynb<br/>多目的最適化: ADE/FDE/推論時間]
+    A["デフォルトパラメータ読み込み<br/>optimal_default.yaml"] --> B["パラメータ範囲のサジェスト<br/>suggest_parameter_range.ipynb"]
+    B --> C{"チューニング対象パラメータ"}
+    C -->|nonlocal_pools| D["tune_hyperparameters.ipynb<br/>TPESamplerで最適化"]
+    C -->|"learning_rate, num_epochs, adl_reg"| E["tune_hyperparameters2.ipynb<br/>多目的最適化: ADE/FDE/推論時間"]
+    C -->|"dec_size, adl_reg, kld_reg"| F["tune_hyperparameters3.ipynb<br/>多目的最適化: ADE/FDE/推論時間"]
     
-    D --> G[一時設定ファイル生成<br/>HYTN_optimal_temp_{trial}.yaml]
+    D --> G["一時設定ファイル生成<br/>HYTN_optimal_temp_trial.yaml"]
     E --> G
     F --> G
     
-    G --> H[トレーニング実行<br/>scripts/training_loop.py]
-    H --> I[評価実行<br/>scripts/test_pretrained_model.py]
-    I --> J[メトリクス取得<br/>ADE, FDE, 推論時間]
-    J --> K[Optuna Studyに記録<br/>MySQLデータベース]
+    G --> H["トレーニング実行<br/>scripts/training_loop.py"]
+    H --> I["評価実行<br/>scripts/test_pretrained_model.py"]
+    I --> J["メトリクス取得<br/>ADE, FDE, 推論時間"]
+    J --> K["Optuna Studyに記録<br/>MySQLデータベース"]
     
-    K --> L{最適化完了?}
+    K --> L{"最適化完了?"}
     L -->|No| C
-    L -->|Yes| M[最適トライアル決定<br/>decide_best_inference_trial.ipynb]
+    L -->|Yes| M["最適トライアル決定<br/>decide_best_inference_trial.ipynb"]
     
-    M --> N[統計的分析<br/>11回実行の四分位範囲分析]
-    N --> O[最適パラメータ確定<br/>optimal.yaml]
+    M --> N["統計的分析<br/>11回実行の四分位範囲分析"]
+    N --> O["最適パラメータ確定<br/>optimal.yaml"]
     
-    P[古いStudy] --> Q[add_oldstudy_to_newstudy.ipynb]
+    P["古いStudy"] --> Q["add_oldstudy_to_newstudy.ipynb"]
     Q --> C
 ```
 

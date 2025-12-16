@@ -1,0 +1,55 @@
+activation: relu
+adl_reg: 1.0436203176489007
+data_scale: 1.86
+dataset_type: image
+dec_size:
+- 1024
+- 512
+- 1024
+discrim: false
+dist_thresh: 100
+dropout: -1
+enc_dest_size:
+- 8
+- 16
+enc_latent_size:
+- 8
+- 50
+enc_past_size:
+- 512
+- 256
+fdim: 16
+future_length: 12
+gpu_index: 0
+kld_reg: 1
+learning_rate: 0.000989521330612582
+mu: 0
+n_values: 20
+non_local_dim: 128
+non_local_g_size:
+- 256
+- 128
+- 64
+non_local_phi_size:
+- 256
+- 128
+- 64
+non_local_theta_size:
+- 256
+- 128
+- 64
+nonlocal_pools: 3
+normalize_type: shift_origin
+num_epochs: 270
+num_workers: 0
+optimizer: Adam
+past_length: 8
+predictor_hidden_size:
+- 1024
+- 512
+- 256
+sigma: 1.3
+test_b_size: 4096
+time_thresh: 0
+train_b_size: 512
+zdim: 16

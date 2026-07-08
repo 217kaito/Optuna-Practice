@@ -1,32 +1,31 @@
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
-import random
-import torch.nn.functional as F
-from torch.nn.utils import weight_norm
-import pdb
 from torch.nn import functional as F
-from torch.distributions.normal import Normal
-import math
-import numpy as np
-import yaml
+
+# 設定ファイルに無い場合に補完するデフォルト値
+DEFAULT_HYPER_PARAMS = {
+    "activation": "relu",
+    "discrim": False,
+    "dropout": -1,
+}
+
+
+def fill_default_hyper_params(hyper_params):
+    '''設定に無いハイパーパラメータへデフォルト値を補完する'''
+    for key, value in DEFAULT_HYPER_PARAMS.items():
+        hyper_params.setdefault(key, value)
+    return hyper_params
+
 
 '''MLP model'''
-# MLP（多層パーセプトロン）クラスの構造
-# 入力(入力次元,出力次元,隠れ層の次元,活性化関数,??,ドロップアウトの閾値)
 class MLP(nn.Module):
     def __init__(self, input_dim, output_dim, activation, discrim, dropout, hidden_size=(1024, 512)):
-        print(f"activation: {activation}, discrim: {discrim}, dropout: {dropout}")
         super(MLP, self).__init__()
-        dims = []
-        dims.append(input_dim)
-        dims.extend(hidden_size)
-        dims.append(output_dim)
-        self.layers = nn.ModuleList() # ModuleList()の形式に沿った形にlayersを指定するよということ？ この場合だったら層の深さなのかも
+        dims = [input_dim, *hidden_size, output_dim]
+        self.layers = nn.ModuleList()
         for i in range(len(dims)-1):
-            self.layers.append(nn.Linear(dims[i], dims[i+1])) # layer[(input_dim, 1024)--(1024, 512)--(512, output_dim)]の三層パーセプトロン
+            self.layers.append(nn.Linear(dims[i], dims[i+1]))
 
-#　活性化関数の選択
         if activation == 'relu':
             self.activation = nn.ReLU()
         elif activation == 'sigmoid':
@@ -35,10 +34,9 @@ class MLP(nn.Module):
         self.sigmoid = nn.Sigmoid() if discrim else None
         self.dropout = dropout
 
-# 順伝播
     def forward(self, x):
-        for i in range(len(self.layers)): 
-            x = self.layers[i](x) 
+        for i in range(len(self.layers)):
+            x = self.layers[i](x)
             if i != len(self.layers)-1: # 出力層でないとき
                 x = self.activation(x)
                 if self.dropout != -1:
@@ -49,13 +47,12 @@ class MLP(nn.Module):
 
 class PECNet(nn.Module):
 
-# PECNet(config/config_gen.pyの中に記述されてるもの)
     def __init__(self, enc_past_size, enc_dest_size, enc_latent_size, dec_size, predictor_size, non_local_theta_size, non_local_phi_size, non_local_g_size, fdim, zdim, nonlocal_pools, non_local_dim, sigma, past_length, future_length, verbose, activation, discrim, dropout):
         '''
         Args:
             size parameters: Dimension sizes
-            nonlocal_pools: Number of nonlocal pooling operations to be performed #どっかに関数あった？
-            sigma: Standard deviation used for sampling N(0, sigma) # 標準偏差sigma
+            nonlocal_pools: Number of nonlocal pooling operations to be performed
+            sigma: Standard deviation used for sampling N(0, sigma)
             past_length: Length of past history (number of timesteps)
             future_length: Length of future trajectory to be predicted
         '''
@@ -120,10 +117,9 @@ class PECNet(nn.Module):
 
     def forward(self, x, initial_pos, dest = None, mask = None, device=torch.device('cpu')):
 
-        # provide destination iff training
-        # assert model.training
-        assert self.training ^ (dest is None) # dest,maskは真偽値を持っている ^は排他的論理和 trainの時に正解ラベルは与えないようにしてる？
-        assert self.training ^ (mask is None) # maskはテストデータと訓練データを区別するために使っている？ socialmaskとは別物の気がする
+        # provide destination iff training (^は排他的論理和)
+        assert self.training ^ (dest is None)
+        assert self.training ^ (mask is None)
 
         # encode
         ftraj = self.encoder_past(x)
@@ -179,3 +175,29 @@ class PECNet(nn.Module):
 
         interpolated_future = self.predictor(prediction_features)
         return interpolated_future
+
+
+def pecnet_from_hyper_params(hyper_params, verbose):
+    '''設定ファイルのハイパーパラメータ辞書からPECNetを構築する'''
+    fill_default_hyper_params(hyper_params)
+    return PECNet(
+        hyper_params["enc_past_size"],
+        hyper_params["enc_dest_size"],
+        hyper_params["enc_latent_size"],
+        hyper_params["dec_size"],
+        hyper_params["predictor_hidden_size"],
+        hyper_params["non_local_theta_size"],
+        hyper_params["non_local_phi_size"],
+        hyper_params["non_local_g_size"],
+        hyper_params["fdim"],
+        hyper_params["zdim"],
+        hyper_params["nonlocal_pools"],
+        hyper_params["non_local_dim"],
+        hyper_params["sigma"],
+        hyper_params["past_length"],
+        hyper_params["future_length"],
+        verbose,
+        hyper_params["activation"],
+        hyper_params["discrim"],
+        hyper_params["dropout"],
+    )

@@ -1,20 +1,12 @@
-from IPython import embed
 import glob
-import pandas as pd
 import pickle
-import os
 import torch
-from torch import nn
 from torch.utils import data
-import random
 import numpy as np
 
 '''for sanity check'''
 def naive_social(p1_key, p2_key, all_data_dict):
-	if abs(p1_key-p2_key)<4:
-		return True
-	else:
-		return False
+	return abs(p1_key-p2_key) < 4
 
 def find_min_time(t1, t2):
 	'''given two time frame arrays, find then min dist (time)'''
@@ -145,7 +137,7 @@ def generate_pooled_data(b_size, t_tresh, d_tresh, train=True, scene=None, verbo
 	if not train:
 		full_test, full_masks_test = collect_data("test", batch_size=b_size, time_thresh=t_tresh, dist_tresh=d_tresh, scene=scene, verbose=verbose)
 		test = [full_test, full_masks_test]
-		test_name = "../social_pool_data/test_{0}_{1}_{2}_{3}.pickle".format('all' if scene is None else scene[:-2] + scene[-1], b_size, t_tresh, d_tresh)# + str(b_size) + "_" + str(t_tresh) + "_" + str(d_tresh) + ".pickle"
+		test_name = "../social_pool_data/test_{0}_{1}_{2}_{3}.pickle".format('all' if scene is None else scene[:-2] + scene[-1], b_size, t_tresh, d_tresh)
 		with open(test_name, 'wb') as f:
 			pickle.dump(test, f)
 
@@ -168,98 +160,37 @@ def calculate_loss(x, reconstructed_x, mean, log_var, criterion, future, interpo
 
 	return RCL_dest, KLD, ADL_traj
 
-'''
-class SocialDataset(data.Dataset):
-
-	def __init__(self, set_name="train", b_size=4096, t_tresh=60, d_tresh=50, scene=None, id=False, verbose=True):
-		'Initialization'
-		load_name = "../social_pool_data/{0}_{1}{2}_{3}_{4}.pickle".format(set_name, 'all_' if scene is None else scene[:-2] + scene[-1] + '_', b_size, t_tresh, d_tresh)
-		print(load_name)
-		with open(load_name, 'rb') as f:
-			data = pickle.load(f)
-
-		traj, masks = data
-		traj_new = []
-
-		if id==False:
-			for t in traj:
-				t = np.array(t)
-				t = t[:,:,2:]
-				traj_new.append(t)
-				if set_name=="train":
-					#augment training set with reversed tracklets...
-					reverse_t = np.flip(t, axis=1).copy()
-					traj_new.append(reverse_t)
-		else:
-			for t in traj:
-				t = np.array(t)
-				traj_new.append(t)
-
-				if set_name=="train":
-					#augment training set with reversed tracklets...
-					reverse_t = np.flip(t, axis=1).copy()
-					traj_new.append(reverse_t)
-
-
-		masks_new = []
-		for m in masks:
-			masks_new.append(m)
-
-			if set_name=="train":
-				#add second time for the reversed tracklets...
-				masks_new.append(m)
-
-		traj_new = np.array(traj_new)
-		masks_new = np.array(masks_new)
-		self.trajectory_batches = traj_new.copy()
-		self.mask_batches = masks_new.copy()
-		self.initial_pos_batches = np.array(initial_pos(self.trajectory_batches)) #for relative positioning
-		if verbose:
-			print("Initialized social dataloader...")
-'''
 class SocialDataset(data.Dataset):
     def __init__(self, set_name="train", b_size=4096, t_tresh=60, d_tresh=50, scene=None, id=False, verbose=True):
         'Initialization'
         load_name = "../social_pool_data/{0}_{1}{2}_{3}_{4}.pickle".format(set_name, 'all_' if scene is None else scene[:-2] + scene[-1] + '_', b_size, t_tresh, d_tresh)
         print(load_name)
         with open(load_name, 'rb') as f:
-            data = pickle.load(f)
-        traj, masks = data
+            traj, masks = pickle.load(f)
+
+        # バッチごとに人数が異なるため、最長のバッチに合わせてゼロパディングする
         traj_new = []
-        print("length: ", len(traj))
-        count = 0
+        max_length = max(len(t) for t in traj)
         for t in traj:
-            print(len(t))
-            # for tt in t:
-            #   count = count + 1
-            #   if len(t[0]) != len(tt):
-                    # print("length: ", len(tt), "count: ", count)
-        if id==False:
-            max_length = max(len(t) for t in traj)  # 最長のトラジェクトリを求める
-            for t in traj:
-                t = np.array(t)
+            t = np.array(t)
+            if id==False:
                 t = t[:,:,2:]
-                padded_t = np.pad(t, ((0, max_length - len(t)), (0, 0), (0, 0)), mode='constant', constant_values=0)  # パディングを追加
-                traj_new.append(padded_t)
-                if set_name=="train":
-                    reverse_t = np.flip(padded_t, axis=1).copy()
-                    traj_new.append(reverse_t)
-        else:
-            max_length = max(len(t) for t in traj)
-            for t in traj:
-                t = np.array(t)
-                padded_t = np.pad(t, ((0, max_length - len(t)), (0, 0), (0, 0)), mode='constant', constant_values=0)
-                traj_new.append(padded_t)
-                if set_name=="train":
-                    reverse_t = np.flip(padded_t, axis=1).copy()
-                    traj_new.append(reverse_t)
-        max_length = max(len(m) for m in masks)  # 最大の長さを計算
+            padded_t = np.pad(t, ((0, max_length - len(t)), (0, 0), (0, 0)), mode='constant', constant_values=0)
+            traj_new.append(padded_t)
+            if set_name=="train":
+                #augment training set with reversed tracklets...
+                reverse_t = np.flip(padded_t, axis=1).copy()
+                traj_new.append(reverse_t)
+
         masks_new = []
+        max_length = max(len(m) for m in masks)
         for m in masks:
-            padded_m = np.pad(m, (0, max_length - len(m)), mode='constant', constant_values=0)  # パディングを追加
+            padded_m = np.pad(m, (0, max_length - len(m)), mode='constant', constant_values=0)
             masks_new.append(padded_m)
             if set_name == "train":
-                masks_new.append(padded_m)  # トレーニングセットの場合、逆順のトラックレットも追加
+                #add second time for the reversed tracklets...
+                masks_new.append(padded_m)
+
         traj_new = np.array(traj_new)
         masks_new = np.array(masks_new)
         self.trajectory_batches = traj_new.copy()

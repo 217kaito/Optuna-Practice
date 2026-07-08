@@ -1,8 +1,8 @@
 # Optunaはサンプラーを用いて最適なパラメータを導きます。
-# デフォルトのサンプラーはTRESamplerですが、いくつかのサンプリングアルゴリズムが提供されています。
+# デフォルトのサンプラーはTPESamplerですが、いくつかのサンプリングアルゴリズムが提供されています。
 import optuna
 
-# TRESamplerは以下のように使用します。
+# TPESamplerは以下のように使用します。
 study = optuna.create_study()
 print(f"Sampler is {study.sampler.__class__.__name__}")
 
